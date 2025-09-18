@@ -1,0 +1,35 @@
+{
+  "name": "anonymous-transport-scheduler",
+  "version": "1.0.0",
+  "description": "Privacy-First Logistics Optimization with Fully Homomorphic Encryption",
+  "main": "index.html",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.ts --network sepolia",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "clean": "hardhat clean"
+  },
+  "keywords": [
+    "fhe",
+    "transportation",
+    "privacy",
+    "blockchain",
+    "logistics"
+  ],
+  "author": "Anonymous Transport Scheduler",
+  "license": "MIT",
+  "devDependencies": {
+    "@fhevm/hardhat-plugin": "^0.0.1-3",
+    "@fhevm/solidity": "^0.7.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@types/node": "^20.19.17",
+    "cross-env": "^7.0.3",
+    "hardhat": "^2.26.3",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "ethers": "^5.7.2"
+  }
+}

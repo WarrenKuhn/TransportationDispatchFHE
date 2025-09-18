@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Transport Scheduler</title>
+    <script>
+        // Load ethers.js with fallback
+        (function() {
+            const scripts = [
+                'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js',
+                'https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js'
+            ];
+
+            function loadScript(src, callback) {
+                const script = document.createElement('script');
+                script.src = src;
+                script.crossOrigin = 'anonymous';
+                script.onload = callback;
+                script.onerror = function() {
+                    console.warn('Failed to load:', src);
+                    callback(false);
+                };
+                document.head.appendChild(script);
+            }
+
+            function tryNext(index) {
+                if (index >= scripts.length) {
+                    console.error('Failed to load ethers.js from all sources');
+                    // Fallback - show error message to user
+                    document.getElementById('walletStatus').textContent = 'Error: ethers.js failed to load';
+                    document.getElementById('connectWallet').textContent = 'Reload Page';
+                    document.getElementById('connectWallet').onclick = function() {
+                        location.reload();
+                    };
+                    return;
+                }
+
+                loadScript(scripts[index], function(success) {
+                    // Add a small delay to ensure ethers is fully loaded
+                    setTimeout(function() {
+                        if (success !== false && typeof ethers !== 'undefined') {
+                            console.log('Ethers.js loaded successfully from:', scripts[index]);
+                            // Initialize app after ethers is loaded
+                            if (typeof window.init === 'function') {
+                                window.init();
+                            }
+                        } else {
+                            tryNext(index + 1);
+                        }
+                    }, 100);
+                });
+            }
+
+            tryNext(0);
+        })();
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.4);
+        }
+
+        .card h2 {
+            color: #1a365d;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2c5364;
+            box-shadow: 0 0 0 3px rgba(44, 83, 100, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #0083b0 0%, #00b4db 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 131, 176, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            background: #e6f7ff;
+            border-left: 5px solid #00b4db;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .wallet-info {
+            background: rgba(230, 255, 250, 0.9);
+            border: 2px solid #4fd1c5;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .wallet-info.disconnected {
+            background: rgba(254, 215, 215, 0.9);
+            border-color: #f56565;
+        }
+
+        .route-list, .request-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .route-item, .request-item {
+            background: linear-gradient(135deg, #e0f7fa 0%, #e1f5fe 100%);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            border-left: 5px solid #00b4db;
+            transition: all 0.3s ease;
+        }
+
+        .route-item:hover, .request-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 180, 219, 0.2);
+        }
+
+        .route-item h4, .request-item h4 {
+            color: #0a4f64;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .route-details, .request-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #00b4db;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            color: #d63031;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 10px;
+            border-left: 5px solid #d63031;
+            font-weight: 600;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #a8e6cf 0%, #74d99f 100%);
+            color: #0d5936;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 10px;
+            border-left: 5px solid #0d5936;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚛 Anonymous Transport Scheduler</h1>
+            <p>Privacy-First Logistics Optimization with Fully Homomorphic Encryption</p>
+        </div>
+
+        <div id="walletInfo" class="wallet-info disconnected">
+            <p><strong>Wallet Status:</strong> <span id="walletStatus">Loading...</span></p>
+            <p><strong>Address:</strong> <span id="walletAddress">-</span></p>
+            <p><strong>Network:</strong> <span id="networkName">-</span></p>
+            <button id="connectWallet" class="btn" onclick="connectWallet()" disabled>Loading...</button>
+        </div>
+
+        <div class="main-content">
+            <!-- Route Registration -->
+            <div class="card">
+                <h2>🛣️ Register Transport Route</h2>
+                <form id="routeForm">
+                    <div class="form-group">
+                        <label for="startX">Start X Coordinate:</label>
+                        <input type="number" id="startX" required min="0" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label for="startY">Start Y Coordinate:</label>
+                        <input type="number" id="startY" required min="0" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label for="endX">End X Coordinate:</label>
+                        <input type="number" id="endX" required min="0" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label for="endY">End Y Coordinate:</label>
+                        <input type="number" id="endY" required min="0" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label for="capacity">Capacity (kg):</label>
+                        <input type="number" id="capacity" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Priority Level:</label>
+                        <select id="priority" required>
+                            <option value="1">Low</option>
+                            <option value="5">Normal</option>
+                            <option value="10">High</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Register Route</button>
+                </form>
+                <div id="routeStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <!-- Transport Request -->
+            <div class="card">
+                <h2>📦 Submit Transport Request</h2>
+                <form id="requestForm">
+                    <div class="form-group">
+                        <label for="pickupX">Pickup X Coordinate:</label>
+                        <input type="number" id="pickupX" required min="0" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label for="pickupY">Pickup Y Coordinate:</label>
+                        <input type="number" id="pickupY" required min="0" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label for="dropX">Drop X Coordinate:</label>
+                        <input type="number" id="dropX" required min="0" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label for="dropY">Drop Y Coordinate:</label>
+                        <input type="number" id="dropY" required min="0" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label for="weight">Weight (kg):</label>
+                        <input type="number" id="weight" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="urgency">Urgency Level:</label>
+                        <select id="urgency" required>
+                            <option value="1">Low</option>
+                            <option value="5">Normal</option>
+                            <option value="10">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxCost">Maximum Cost (ETH):</label>
+                        <input type="number" id="maxCost" step="0.001" required min="0">
+                    </div>
+                    <button type="submit" class="btn">Submit Request</button>
+                </form>
+                <div id="requestStatus" class="status" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Route Optimization -->
+        <div class="card">
+            <h2>⚡ Route Optimization</h2>
+            <div class="form-group">
+                <label for="routeIdOptimize">Route ID to Optimize:</label>
+                <input type="number" id="routeIdOptimize" required min="1">
+            </div>
+            <button onclick="optimizeSchedule()" class="btn">Optimize Schedule</button>
+            <div id="optimizeStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <!-- My Routes -->
+        <div class="route-list">
+            <h2>🚚 My Routes</h2>
+            <button onclick="loadMyRoutes()" class="btn">Load My Routes</button>
+            <div id="myRoutes" class="loading" style="display: none;">Loading routes...</div>
+        </div>
+
+        <!-- My Requests -->
+        <div class="request-list">
+            <h2>📋 My Requests</h2>
+            <button onclick="loadMyRequests()" class="btn">Load My Requests</button>
+            <div id="myRequests" class="loading" style="display: none;">Loading requests...</div>
+        </div>
+    </div>
+
+    <script>
+        // Contract Configuration
+        const CONTRACT_ADDRESS = '0x5C24D812bBBFabC499B418a50abeeda17486Db44';
+        const CONTRACT_ABI = [
+            "function owner() view returns (address)",
+            "function routeCounter() view returns (uint32)",
+            "function requestCounter() view returns (uint32)",
+            "function registerRoute(uint16 _startX, uint16 _startY, uint16 _endX, uint16 _endY, uint32 _capacity, uint16 _priority) external",
+            "function submitTransportRequest(uint16 _pickupX, uint16 _pickupY, uint16 _dropX, uint16 _dropY, uint32 _weight, uint16 _urgency, uint32 _maxCost) external",
+            "function optimizeSchedule(uint32 _routeId) external",
+            "function getRouteInfo(uint32 _routeId) view returns (bool isActive, address carrier, uint256 timestamp)",
+            "function getRequestStatus(uint32 _requestId) view returns (bool isMatched, address requester, uint32 assignedRoute, uint256 requestTime)",
+            "function getCarrierRoutes(address _carrier) view returns (uint32[])",
+            "function getUserRequests(address _user) view returns (uint32[])",
+            "function deactivateRoute(uint32 _routeId) external",
+            "function reactivateRoute(uint32 _routeId) external",
+            "event RouteRegistered(uint32 indexed routeId, address indexed carrier)",
+            "event RequestSubmitted(uint32 indexed requestId, address indexed requester)",
+            "event ScheduleOptimized(uint32 indexed routeId, uint256 timestamp)",
+            "event TransportMatched(uint32 indexed requestId, uint32 indexed routeId)"
+        ];
+
+        let provider;
+        let signer;
+        let contract;
+        let userAccount;
+
+        // Initialize the application
+        async function init() {
+            console.log('Initializing Anonymous Transport Scheduler...');
+
+            // Enable the connect button now that ethers is loaded
+            const connectBtn = document.getElementById('connectWallet');
+            connectBtn.disabled = false;
+            connectBtn.textContent = 'Connect Wallet';
+
+            if (typeof window.ethereum !== 'undefined') {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                document.getElementById('walletStatus').textContent = 'Not Connected';
+
+                // Check if already connected
+                try {
+                    const accounts = await provider.listAccounts();
+                    if (accounts.length > 0) {
+                        await connectWallet();
+                    }
+                } catch (error) {
+                    console.error('Error checking accounts:', error);
+                    document.getElementById('walletStatus').textContent = 'Not Connected';
+                }
+            } else {
+                document.getElementById('walletStatus').textContent = 'MetaMask not detected';
+                connectBtn.textContent = 'Install MetaMask';
+                connectBtn.onclick = function() {
+                    window.open('https://metamask.io/download/', '_blank');
+                };
+            }
+        }
+
+        // Connect wallet
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('Please install MetaMask to use this application');
+                    return;
+                }
+
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                userAccount = await signer.getAddress();
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+                const network = await provider.getNetwork();
+
+                document.getElementById('walletStatus').textContent = 'Connected';
+                document.getElementById('walletAddress').textContent = `${userAccount.substring(0, 6)}...${userAccount.substring(38)}`;
+                document.getElementById('networkName').textContent = network.name;
+                document.getElementById('walletInfo').className = 'wallet-info';
+                document.getElementById('connectWallet').textContent = 'Connected';
+                document.getElementById('connectWallet').disabled = true;
+
+                console.log('Connected to:', userAccount);
+                console.log('Network:', network.name);
+
+            } catch (error) {
+                console.error('Connection failed:', error);
+                showStatus('routeStatus', 'Failed to connect wallet: ' + error.message, 'error');
+            }
+        }
+
+        // Register route
+        document.getElementById('routeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!contract) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const startX = parseInt(document.getElementById('startX').value);
+            const startY = parseInt(document.getElementById('startY').value);
+            const endX = parseInt(document.getElementById('endX').value);
+            const endY = parseInt(document.getElementById('endY').value);
+            const capacity = parseInt(document.getElementById('capacity').value);
+            const priority = parseInt(document.getElementById('priority').value);
+
+            // Validate inputs
+            if (isNaN(startX) || isNaN(startY) || isNaN(endX) || isNaN(endY) || isNaN(capacity) || isNaN(priority)) {
+                alert('Please fill in all fields with valid numbers');
+                return;
+            }
+
+            try {
+                showStatus('routeStatus', 'Registering route...', 'loading');
+
+                const tx = await contract.registerRoute(startX, startY, endX, endY, capacity, priority);
+
+                showStatus('routeStatus', `Transaction submitted: ${tx.hash}`, 'loading');
+
+                const receipt = await tx.wait();
+
+                showStatus('routeStatus', `Route registered successfully! Transaction: ${receipt.transactionHash}`, 'success');
+
+                // Reset form
+                e.target.reset();
+
+            } catch (error) {
+                console.error('Route registration failed:', error);
+                showStatus('routeStatus', `Registration failed: ${error.message}`, 'error');
+            }
+        });
+
+        // Submit transport request
+        document.getElementById('requestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!contract) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const pickupX = parseInt(document.getElementById('pickupX').value);
+            const pickupY = parseInt(document.getElementById('pickupY').value);
+            const dropX = parseInt(document.getElementById('dropX').value);
+            const dropY = parseInt(document.getElementById('dropY').value);
+            const weight = parseInt(document.getElementById('weight').value);
+            const urgency = parseInt(document.getElementById('urgency').value);
+            const maxCostValue = parseFloat(document.getElementById('maxCost').value);
+
+            // Validate inputs
+            if (isNaN(pickupX) || isNaN(pickupY) || isNaN(dropX) || isNaN(dropY) || isNaN(weight) || isNaN(urgency) || isNaN(maxCostValue)) {
+                alert('Please fill in all fields with valid numbers');
+                return;
+            }
+
+            const maxCost = ethers.utils.parseEther(maxCostValue.toString());
+
+            try {
+                showStatus('requestStatus', 'Submitting request...', 'loading');
+
+                const tx = await contract.submitTransportRequest(pickupX, pickupY, dropX, dropY, weight, urgency, maxCost);
+
+                showStatus('requestStatus', `Transaction submitted: ${tx.hash}`, 'loading');
+
+                const receipt = await tx.wait();
+
+                showStatus('requestStatus', `Request submitted successfully! Transaction: ${receipt.transactionHash}`, 'success');
+
+                // Reset form
+                e.target.reset();
+
+            } catch (error) {
+                console.error('Request submission failed:', error);
+                showStatus('requestStatus', `Submission failed: ${error.message}`, 'error');
+            }
+        });
+
+        // Optimize schedule
+        async function optimizeSchedule() {
+            if (!contract) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            const routeId = parseInt(document.getElementById('routeIdOptimize').value);
+
+            if (!routeId) {
+                alert('Please enter a route ID');
+                return;
+            }
+
+            try {
+                showStatus('optimizeStatus', 'Optimizing schedule...', 'loading');
+
+                const tx = await contract.optimizeSchedule(routeId);
+
+                showStatus('optimizeStatus', `Transaction submitted: ${tx.hash}`, 'loading');
+
+                const receipt = await tx.wait();
+
+                showStatus('optimizeStatus', `Schedule optimized successfully! Transaction: ${receipt.transactionHash}`, 'success');
+
+            } catch (error) {
+                console.error('Schedule optimization failed:', error);
+                showStatus('optimizeStatus', `Optimization failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Load my routes
+        async function loadMyRoutes() {
+            if (!contract || !userAccount) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            try {
+                document.getElementById('myRoutes').style.display = 'block';
+                document.getElementById('myRoutes').innerHTML = '<div class="loading">Loading routes...</div>';
+
+                const routeIds = await contract.getCarrierRoutes(userAccount);
+
+                if (routeIds.length === 0) {
+                    document.getElementById('myRoutes').innerHTML = '<p>No routes found</p>';
+                    return;
+                }
+
+                let routeHtml = '';
+
+                for (let i = 0; i < routeIds.length; i++) {
+                    const routeId = routeIds[i];
+                    const routeInfo = await contract.getRouteInfo(routeId);
+
+                    routeHtml += `
+                        <div class="route-item">
+                            <h4>Route #${routeId}</h4>
+                            <div class="route-details">
+                                <div><strong>Status:</strong> ${routeInfo.isActive ? 'Active' : 'Inactive'}</div>
+                                <div><strong>Created:</strong> ${new Date(routeInfo.timestamp * 1000).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('myRoutes').innerHTML = routeHtml;
+
+            } catch (error) {
+                console.error('Failed to load routes:', error);
+                document.getElementById('myRoutes').innerHTML = `<div class="error">Failed to load routes: ${error.message}</div>`;
+            }
+        }
+
+        // Load my requests
+        async function loadMyRequests() {
+            if (!contract || !userAccount) {
+                alert('Please connect your wallet first');
+                return;
+            }
+
+            try {
+                document.getElementById('myRequests').style.display = 'block';
+                document.getElementById('myRequests').innerHTML = '<div class="loading">Loading requests...</div>';
+
+                const requestIds = await contract.getUserRequests(userAccount);
+
+                if (requestIds.length === 0) {
+                    document.getElementById('myRequests').innerHTML = '<p>No requests found</p>';
+                    return;
+                }
+
+                let requestHtml = '';
+
+                for (let i = 0; i < requestIds.length; i++) {
+                    const requestId = requestIds[i];
+                    const requestStatus = await contract.getRequestStatus(requestId);
+
+                    requestHtml += `
+                        <div class="request-item">
+                            <h4>Request #${requestId}</h4>
+                            <div class="request-details">
+                                <div><strong>Status:</strong> ${requestStatus.isMatched ? 'Matched' : 'Pending'}</div>
+                                <div><strong>Route:</strong> ${requestStatus.assignedRoute > 0 ? `#${requestStatus.assignedRoute}` : 'None'}</div>
+                                <div><strong>Submitted:</strong> ${new Date(requestStatus.requestTime * 1000).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('myRequests').innerHTML = requestHtml;
+
+            } catch (error) {
+                console.error('Failed to load requests:', error);
+                document.getElementById('myRequests').innerHTML = `<div class="error">Failed to load requests: ${error.message}</div>`;
+            }
+        }
+
+
+        // Show status message
+        function showStatus(elementId, message, type) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.style.display = 'block';
+            statusElement.className = `status ${type}`;
+            statusElement.textContent = message;
+        }
+
+        // Initialize function - will be called after ethers.js loads
+        window.init = init;
+
+        // Handle account changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    // User disconnected
+                    location.reload();
+                } else {
+                    // User switched accounts
+                    connectWallet();
+                }
+            });
+
+            window.ethereum.on('chainChanged', () => {
+                // User switched networks
+                location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
