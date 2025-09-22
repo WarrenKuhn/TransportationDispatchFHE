@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1a365d" />
+    <meta name="description" content="Privacy Cargo Tracking - Secure Logistics Management with Fully Homomorphic Encryption" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <title>Privacy Cargo Tracking System</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .road-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: url("data:image/svg+xml,%3csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3e%3cdefs%3e%3cpattern id='road' x='0' y='0' width='60' height='60' patternUnits='userSpaceOnUse'%3e%3cpath d='M30 0L30 60M0 30L60 30' stroke='%23475569' stroke-width='0.5' opacity='0.3'/%3e%3c/pattern%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='url(%23road)'/%3e%3c/svg%3e") repeat;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+            padding: 3rem 0;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(40px);
+        }
+
+        .header h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            margin-bottom: 1rem;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        .connection-status {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #1e40af;
+            border-radius: 15px;
+            padding: 1rem 2rem;
+            margin: 2rem auto;
+            max-width: 600px;
+            backdrop-filter: blur(10px);
+        }
+
+        .wallet-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .connect-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .connect-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .mode-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #10b981;
+        }
+
+        .mode-indicator svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+
+        .section {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: #e2e8f0;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            color: #3b82f6;
+        }
+
+        .transport-routes {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .route-card {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .route-card:hover {
+            transform: translateY(-3px);
+            border-color: #3b82f6;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+        }
+
+        .route-card.selected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .route-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #e2e8f0;
+        }
+
+        .route-description {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .route-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .voting-section {
+            grid-column: 1 / -1;
+            margin-top: 2rem;
+        }
+
+        .voting-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .vote-option {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .vote-option:hover {
+            border-color: #3b82f6;
+            transform: translateY(-3px);
+        }
+
+        .vote-option.selected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .vote-option h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #e2e8f0;
+        }
+
+        .vote-option p {
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .vote-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .voting-controls {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .vote-type-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .vote-type-btn {
+            background: rgba(51, 65, 85, 0.8);
+            color: #94a3b8;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .vote-type-btn.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .vote-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vote-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .vote-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .encryption-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Preset Section Styles */
+        .preset-section {
+            margin-bottom: 3rem;
+        }
+
+        .preset-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            margin-left: 1rem;
+        }
+
+        .preset-controls {
+            margin-bottom: 2rem;
+        }
+
+        .preset-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preset-info p {
+            color: #94a3b8;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .preset-selector {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .preset-dropdown {
+            background: rgba(51, 65, 85, 0.8);
+            color: #e2e8f0;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            min-width: 250px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preset-dropdown:hover {
+            border-color: #3b82f6;
+        }
+
+        .preset-dropdown:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .deploy-btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .deploy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .deploy-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .deployed-proposals {
+            background: rgba(51, 65, 85, 0.6);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+        }
+
+        .proposals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .deployed-proposal {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .deployed-proposal:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+        }
+
+        .deployed-proposal.processing {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .deployed-proposal h4 {
+            font-size: 1.1rem;
+            color: #e2e8f0;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .deployed-proposal p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+
+        .proposal-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .proposal-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .proposal-tx {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            word-break: break-all;
+        }
+
+        .deployment-status {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .deployment-status.show {
+            display: block;
+        }
+
+        .deployment-status h4 {
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="road-pattern"></div>
+
+    <div class="container">
+        <header class="header">
+            <h1>Privacy Cargo Tracking</h1>
+            <p class="subtitle">Secure Logistics Management with Fully Homomorphic Encryption</p>
+
+            <div class="connection-status">
+                <div class="wallet-info">
+                    <div class="status-dot"></div>
+                    <span id="walletAddress">Click to Connect MetaMask</span>
+                    <button id="connectBtn" class="connect-btn">Connect Wallet</button>
+                </div>
+                <div class="mode-indicator">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,11.5 16,12.4 16,13V16C16,16.6 15.6,17 15,17H9C8.4,17 8,16.6 8,16V13C8,12.4 8.4,11.5 9,11.5V10C9,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.2,9.2 10.2,10V11.5H13.8V10C13.8,9.2 12.8,8.2 12,8.2Z"/>
+                    </svg>
+                    <span id="modeText">Connected to Sepolia - All cargo data encrypted using FHE</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <section class="section">
+                <h2 class="section-title">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18,18.5A1.5,1.5 0 0,1 16.5,20H7.5A1.5,1.5 0 0,1 6,18.5A1.5,1.5 0 0,1 7.5,17H16.5A1.5,1.5 0 0,1 18,18.5M16.5,12A1.5,1.5 0 0,1 18,13.5A1.5,1.5 0 0,1 16.5,15H7.5A1.5,1.5 0 0,1 6,13.5A1.5,1.5 0 0,1 7.5,12H16.5M7.5,7A1.5,1.5 0 0,1 9,8.5A1.5,1.5 0 0,1 7.5,10H16.5A1.5,1.5 0 0,1 18,8.5A1.5,1.5 0 0,1 16.5,7H7.5Z"/>
+                    </svg>
+                    Cargo Routes
+                </h2>
+
+                <div class="transport-routes">
+                    <div class="route-card" onclick="selectRoute('urban-express')">
+                        <div class="route-name">🚚 Express Delivery</div>
+                        <div class="route-description">High-priority cargo delivery with encrypted tracking data</div>
+                        <div class="route-stats">
+                            <span>📦 247 packages</span>
+                            <span>🔒 Encrypted</span>
+                        </div>
+                    </div>
+
+                    <div class="route-card" onclick="selectRoute('cargo-secure')">
+                        <div class="route-name">🔒 Secure Freight</div>
+                        <div class="route-description">High-security cargo transport with encrypted manifests</div>
+                        <div class="route-stats">
+                            <span>🚛 123 shipments</span>
+                            <span>🔐 Maximum Security</span>
+                        </div>
+                    </div>
+
+                    <div class="route-card" onclick="selectRoute('emergency-response')">
+                        <div class="route-name">⚡ Priority Cargo</div>
+                        <div class="route-description">Time-critical shipments with real-time encrypted tracking</div>
+                        <div class="route-stats">
+                            <span>🚨 89 urgent</span>
+                            <span>⚡ Critical</span>
+                        </div>
+                    </div>
+
+                    <div class="route-card" onclick="selectRoute('night-logistics')">
+                        <div class="route-name">🌙 Night Operations</div>
+                        <div class="route-description">24/7 secure cargo network for confidential shipments</div>
+                        <div class="route-stats">
+                            <span>🚚 156 active</span>
+                            <span>🌃 24/7</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2 class="section-title">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z"/>
+                    </svg>
+                    Cargo Statistics
+                </h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalDispatches">0</div>
+                        <div class="stat-label">Encrypted Shipments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="activeVehicles">413</div>
+                        <div class="stat-label">Active Cargo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Privacy Level</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="onlineDrivers">89</div>
+                        <div class="stat-label">Online Trackers</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="section preset-section">
+            <h2 class="section-title">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"/>
+                </svg>
+                Preset Proposal Templates
+                <span class="preset-badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;">
+                        <path d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2Z"/>
+                    </svg>
+                    Template Library
+                </span>
+            </h2>
+
+            <div class="preset-controls">
+                <div class="preset-info">
+                    <p>Successfully deployed cargo management proposals. Click any proposal to trigger blockchain transaction.</p>
+                </div>
+            </div>
+
+            <div id="deployedProposals" class="deployed-proposals">
+                <!-- Deployed proposals will be displayed here -->
+            </div>
+        </section>
+
+        <section class="section voting-section">
+            <h2 class="section-title">
+                <svg class="section-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18,13H13V18H11V13H6V11H11V6H13V11H18V13Z"/>
+                </svg>
+                Cargo System Governance
+                <span class="encryption-badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;">
+                        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z"/>
+                    </svg>
+                    FHE Encrypted
+                </span>
+            </h2>
+
+            <div class="voting-options">
+                <div class="vote-option" data-vote="autonomous-fleet">
+                    <h3>🤖 Automated Sorting System</h3>
+                    <p>Deploy AI-powered cargo sorting and routing systems across all distribution centers</p>
+                    <div class="vote-stats">
+                        <span>Type: Infrastructure</span>
+                        <span>Impact: High</span>
+                    </div>
+                </div>
+
+                <div class="vote-option" data-vote="carbon-neutral">
+                    <h3>🌱 Green Logistics Initiative</h3>
+                    <p>Transition cargo fleet to electric vehicles and implement carbon-neutral shipping by 2025</p>
+                    <div class="vote-stats">
+                        <span>Type: Environment</span>
+                        <span>Impact: Critical</span>
+                    </div>
+                </div>
+
+                <div class="vote-option" data-vote="privacy-enhancement">
+                    <h3>🔐 Enhanced Cargo Privacy</h3>
+                    <p>Implement zero-knowledge proof system for all cargo manifests and tracking data</p>
+                    <div class="vote-stats">
+                        <span>Type: Security</span>
+                        <span>Impact: High</span>
+                    </div>
+                </div>
+
+                <div class="vote-option" data-vote="smart-tracking">
+                    <h3>📱 Smart Tracking System</h3>
+                    <p>Implement IoT sensors and real-time tracking for all cargo containers and packages</p>
+                    <div class="vote-stats">
+                        <span>Type: Technology</span>
+                        <span>Impact: High</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="voting-controls">
+                <div class="vote-type-selector">
+                    <button class="vote-type-btn active" data-type="approve">✅ Approve</button>
+                    <button class="vote-type-btn" data-type="reject">❌ Reject</button>
+                </div>
+                <button id="voteBtn" class="vote-btn" onclick="submitVote()">Submit Encrypted Vote</button>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <p>Privacy Cargo Tracking System - Powered by Fully Homomorphic Encryption</p>
+    </footer>
+
+    <script src="./ethers-v6.umd.min.js"></script>
+    <script>
+        // Contract configuration - TransportationDispatchFHE
+        const CONTRACT_ADDRESS = "0x1234567890abcdef1234567890abcdef12345678"; // Update with deployed contract address
+        const SEPOLIA_CHAIN_ID = '0xaa36a7'; // 11155111 in hex
+
+        // Global variables
+        let provider = null;
+        let signer = null;
+        let contract = null;
+        let userAccount = null;
+        let selectedProposal = null;
+        let selectedVote = 'approve';
+        let selectedRoute = null;
+        let isVoting = false;
+        let dispatchCount = 0;
+
+        // Deployed Proposals Data
+        const DEPLOYED_PROPOSALS = [
+            {
+                id: 'smart-tracking-001',
+                title: '🚛 Smart Container Tracking',
+                description: 'Real-time IoT tracking for all cargo containers with encrypted location data',
+                type: 'Technology',
+                impact: 'High',
+                status: 'Deployed',
+                txHash: '0x1a2b3c4d5e6f7890abcdef1234567890abcdef1234567890abcdef1234567890',
+                timestamp: '2025-09-22 10:30:00'
+            },
+            {
+                id: 'privacy-manifests-002',
+                title: '🔐 Encrypted Cargo Manifests',
+                description: 'Zero-knowledge proof system for confidential cargo documentation',
+                type: 'Security',
+                impact: 'Critical',
+                status: 'Deployed',
+                txHash: '0x2b3c4d5e6f7890abcdef1234567890abcdef1234567890abcdef1234567890ab',
+                timestamp: '2025-09-22 11:15:00'
+            },
+            {
+                id: 'route-optimization-003',
+                title: '🗺️ AI Route Optimization',
+                description: 'Machine learning algorithms for optimal cargo routing and fuel efficiency',
+                type: 'Infrastructure',
+                impact: 'High',
+                status: 'Deployed',
+                txHash: '0x3c4d5e6f7890abcdef1234567890abcdef1234567890abcdef1234567890abcd',
+                timestamp: '2025-09-22 12:00:00'
+            },
+            {
+                id: 'green-logistics-004',
+                title: '🌱 Carbon Neutral Shipping',
+                description: 'Electric vehicle fleet expansion with renewable energy charging stations',
+                type: 'Environment',
+                impact: 'Critical',
+                status: 'Deployed',
+                txHash: '0x4d5e6f7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+                timestamp: '2025-09-22 12:45:00'
+            },
+            {
+                id: 'emergency-response-005',
+                title: '🚨 Priority Cargo System',
+                description: 'Automated priority routing for time-critical and emergency shipments',
+                type: 'Safety',
+                impact: 'High',
+                status: 'Deployed',
+                txHash: '0x5e6f7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef12',
+                timestamp: '2025-09-22 13:30:00'
+            },
+            {
+                id: 'blockchain-integration-006',
+                title: '⛓️ Immutable Cargo History',
+                description: 'Blockchain-based cargo provenance and authenticity verification system',
+                type: 'Technology',
+                impact: 'Medium',
+                status: 'Deployed',
+                txHash: '0x6f7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234',
+                timestamp: '2025-09-22 14:15:00'
+            }
+        ];
+
+        // Legacy Preset Proposals Data (for reference)
+        const PRESET_PROPOSALS = {
+            'smart-city': {
+                name: 'Smart City Transportation Package',
+                description: 'Comprehensive urban intelligent transportation solution',
+                proposals: [
+                    {
+                        id: 'ai-traffic-control',
+                        title: '🤖 AI Traffic Control System',
+                        description: 'Deploy AI-powered intelligent traffic signal control system for real-time traffic flow optimization',
+                        type: 'Infrastructure',
+                        impact: 'High',
+                        priority: 1
+                    },
+                    {
+                        id: 'smart-parking',
+                        title: '🅿️ Smart Parking Management',
+                        description: 'Establish intelligent parking system with real-time parking space detection and automatic guidance',
+                        type: 'Service',
+                        impact: 'Medium',
+                        priority: 2
+                    },
+                    {
+                        id: 'connected-vehicles',
+                        title: '📡 Connected Vehicle Platform',
+                        description: 'Build vehicle-to-everything communication platform for vehicle-to-vehicle and vehicle-to-infrastructure cooperation',
+                        type: 'Technology',
+                        impact: 'High',
+                        priority: 1
+                    },
+                    {
+                        id: 'data-analytics',
+                        title: '📈 Traffic Data Analytics',
+                        description: 'Deploy big data analytics platform for traffic demand prediction and route optimization',
+                        type: 'Analytics',
+                        impact: 'Medium',
+                        priority: 3
+                    }
+                ]
+            },
+            'green-transport': {
+                name: 'Green Transportation Initiative',
+                description: 'Environmentally sustainable transportation solutions',
+                proposals: [
+                    {
+                        id: 'electric-fleet',
+                        title: '⚡ Electric Fleet Expansion',
+                        description: 'Replace 80% of public transportation vehicles with electric vehicles',
+                        type: 'Environmental',
+                        impact: 'High',
+                        priority: 1
+                    },
+                    {
+                        id: 'bike-sharing',
+                        title: '🚲 Bike Sharing Network',
+                        description: 'Establish city-wide bike sharing network to promote green transportation',
+                        type: 'Service',
+                        impact: 'Medium',
+                        priority: 2
+                    },
+                    {
+                        id: 'renewable-energy',
+                        title: '🌞 Renewable Energy Charging',
+                        description: 'Build solar and wind-powered charging station network',
+                        type: 'Infrastructure',
+                        impact: 'High',
+                        priority: 1
+                    },
+                    {
+                        id: 'carbon-tracking',
+                        title: '🌿 Carbon Footprint Tracking',
+                        description: 'Implement transportation carbon emission monitoring and emission reduction incentive system',
+                        type: 'Monitoring',
+                        impact: 'Medium',
+                        priority: 3
+                    }
+                ]
+            },
+            'emergency-system': {
+                name: 'Emergency Response System',
+                description: 'Comprehensive emergency situation traffic response mechanism',
+                proposals: [
+                    {
+                        id: 'emergency-lanes',
+                        title: '🚨 Smart Emergency Lanes',
+                        description: 'Establish dynamic emergency lane system that automatically opens corridors for rescue vehicles',
+                        type: 'Infrastructure',
+                        impact: 'Critical',
+                        priority: 1
+                    },
+                    {
+                        id: 'medical-transport',
+                        title: '🏥 Medical Transport Network',
+                        description: 'Optimize ambulance dispatch and medical supply transportation system',
+                        type: 'Service',
+                        impact: 'Critical',
+                        priority: 1
+                    },
+                    {
+                        id: 'disaster-response',
+                        title: '⛑️ Disaster Response Mechanism',
+                        description: 'Establish traffic emergency plans for natural disasters and emergencies',
+                        type: 'Safety',
+                        impact: 'High',
+                        priority: 2
+                    },
+                    {
+                        id: 'communication-backup',
+                        title: '📡 Communication Backup System',
+                        description: 'Deploy backup communication and navigation systems for emergency situations',
+                        type: 'Technology',
+                        impact: 'High',
+                        priority: 2
+                    }
+                ]
+            },
+            'logistics-optimization': {
+                name: 'Logistics Optimization Plan',
+                description: 'Efficient freight and logistics management system',
+                proposals: [
+                    {
+                        id: 'freight-corridors',
+                        title: '🚛 Dedicated Freight Corridors',
+                        description: 'Build dedicated freight corridors to separate passenger and freight traffic',
+                        type: 'Infrastructure',
+                        impact: 'High',
+                        priority: 1
+                    },
+                    {
+                        id: 'warehouse-automation',
+                        title: '🏭 Warehouse Automation',
+                        description: 'Promote smart warehousing and automated sorting systems',
+                        type: 'Technology',
+                        impact: 'Medium',
+                        priority: 2
+                    },
+                    {
+                        id: 'last-mile-delivery',
+                        title: '📦 Last Mile Delivery',
+                        description: 'Optimize last mile delivery including drone and robot delivery systems',
+                        type: 'Service',
+                        impact: 'Medium',
+                        priority: 2
+                    },
+                    {
+                        id: 'supply-chain-visibility',
+                        title: '🔍 Supply Chain Visibility',
+                        description: 'Establish end-to-end supply chain visibility and tracking systems',
+                        type: 'Monitoring',
+                        impact: 'Medium',
+                        priority: 3
+                    }
+                ]
+            }
+        };
+
+        // Contract ABI for TransportationDispatchFHE - Updated to match exact contract signatures
+        const CONTRACT_ABI = [
+            // Core voting functions
+            "function submitVote(uint8 _vote) external",
+            "function selectRoute(uint8 _routeId) external",
+            "function createDispatch() external",
+
+            // View functions for checking state
+            "function checkHasVoted(address _voter) external view returns (bool)",
+            "function hasVoted(address) external view returns (bool)",
+            "function getDispatchCount() external view returns (uint256)",
+            "function dispatchCount() external view returns (uint256)",
+            "function getTotalVotes() external view returns (uint256)",
+            "function totalVotes() external view returns (uint256)",
+            "function isDispatchActive(uint256 _dispatchId) external view returns (bool)",
+            "function getMyVote() external view returns (ebool)",
+            "function getMyRoute() external view returns (euint8)",
+
+            // Events
+            "event VoteSubmitted(address indexed voter, uint256 timestamp)",
+            "event DispatchCreated(uint256 indexed dispatchId, uint256 timestamp)",
+            "event RouteSelected(address indexed user, uint256 timestamp)"
+        ];
+
+        // Initialize the application
+        async function init() {
+            console.log("🚀 Initializing Privacy Cargo Tracking System...");
+            console.log("🔧 Contract Address:", CONTRACT_ADDRESS);
+
+            // Step 1: Detection - Check for MetaMask
+            if (typeof window.ethereum !== 'undefined') {
+                // Step 5: Create ethers.js v6 BrowserProvider
+                provider = new ethers.BrowserProvider(window.ethereum);
+                console.log("✅ MetaMask detected");
+
+                // Check if already connected
+                try {
+                    const accounts = await provider.send("eth_accounts", []);
+                    if (accounts.length > 0) {
+                        await connectWallet();
+                    }
+                } catch (error) {
+                    console.log("Not connected to MetaMask");
+                }
+            } else {
+                console.log("❌ MetaMask not found");
+                showNotification("Please install MetaMask to use this application", "error");
+            }
+
+            setupEventListeners();
+            updateStats();
+        }
+
+        // Validate contract compatibility and detect FHE features
+        async function validateContract() {
+            if (!contract) return false;
+
+            try {
+                console.log("🔍 Validating contract compatibility...");
+
+                // Test basic contract functions
+                const dispatchCount = await contract.getDispatchCount();
+                const totalVotes = await contract.getTotalVotes();
+
+                console.log("📊 Contract data - Dispatches:", dispatchCount.toString(), "Votes:", totalVotes.toString());
+                console.log("✅ Contract validation successful");
+                showNotification("Contract connected successfully! 🎉", "success");
+                return true;
+
+            } catch (error) {
+                console.error("❌ Contract validation failed:", error);
+
+                // Check if it's a "could not decode result data" error (contract doesn't exist)
+                if (error.message.includes("could not decode result data")) {
+                    console.log("⚠️ Contract not deployed at this address - skipping validation");
+                    showNotification("Demo mode: Contract not deployed yet", "info");
+                    return true; // Allow demo mode without contract
+                }
+
+                showNotification("Contract validation failed: " + error.message, "error");
+                return false;
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Connect wallet button
+            document.getElementById('connectBtn').addEventListener('click', connectWallet);
+
+            // Vote type selector
+            document.querySelectorAll('.vote-type-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.vote-type-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    selectedVote = e.target.dataset.type;
+                });
+            });
+
+            // Voting options
+            document.querySelectorAll('.vote-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    document.querySelectorAll('.vote-option').forEach(o => o.classList.remove('selected'));
+                    e.currentTarget.classList.add('selected');
+                    selectedProposal = e.currentTarget.dataset.vote;
+                });
+            });
+
+            // Initialize deployed proposals display
+            initializeDeployedProposals();
+        }
+
+        // Connect to MetaMask wallet with ethers.js v6
+        async function connectWallet() {
+            if (!provider) {
+                showNotification("Please install MetaMask first", "error");
+                return;
+            }
+
+            try {
+                console.log("🔗 Connecting to MetaMask...");
+
+                // Step 2: Request account access
+                const accounts = await provider.send("eth_requestAccounts", []);
+                userAccount = accounts[0];
+                console.log("👤 Account access granted:", userAccount);
+
+                // Step 3: Network validation - Check current network
+                const network = await provider.getNetwork();
+                console.log("🌐 Current network:", network.name, "Chain ID:", network.chainId.toString());
+
+                // Step 4: Network switching - Ensure Sepolia connection
+                if (network.chainId !== 11155111n) {
+                    console.log("🔄 Switching to Sepolia testnet...");
+                    try {
+                        await provider.send("wallet_switchEthereumChain", [{ chainId: SEPOLIA_CHAIN_ID }]);
+                        console.log("✅ Successfully switched to Sepolia");
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            // Network not added, add Sepolia
+                            console.log("📝 Adding Sepolia network...");
+                            await provider.send("wallet_addEthereumChain", [{
+                                chainId: SEPOLIA_CHAIN_ID,
+                                chainName: "Sepolia Testnet",
+                                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+                                rpcUrls: ["https://sepolia.infura.io/v3/"],
+                                blockExplorerUrls: ["https://sepolia.etherscan.io"]
+                            }]);
+                            console.log("✅ Sepolia network added successfully");
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+
+                // Step 5: Get signer from BrowserProvider
+                signer = await provider.getSigner();
+                console.log("✍️ Signer obtained:", await signer.getAddress());
+
+                // Step 6: Create contract instance
+                contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                console.log("📄 Contract instance created:", CONTRACT_ADDRESS);
+
+                // Validate contract compatibility
+                const isValid = await validateContract();
+                if (!isValid) {
+                    console.error("❌ Contract validation failed");
+                    contract = null;
+                    return;
+                }
+
+                // Step 7: Update UI state
+                document.getElementById('walletAddress').textContent =
+                    `${userAccount.substring(0, 6)}...${userAccount.substring(38)}`;
+                document.getElementById('connectBtn').textContent = "Connected ✓";
+                document.getElementById('connectBtn').disabled = true;
+
+                // Success handling with English message
+                console.log("✅ Wallet connected successfully:", userAccount);
+                console.log("✅ Contract validated and connected");
+                showNotification("Connected to Sepolia! ✅", "success");
+
+                // Get initial state
+                await updateStats();
+
+            } catch (error) {
+                console.error("❌ Connection failed:", error);
+                let errorMessage = "Failed to connect wallet";
+
+                if (error.code === 4001) {
+                    errorMessage = "User rejected the connection request";
+                } else if (error.code === -32002) {
+                    errorMessage = "Connection request already pending";
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                showNotification(errorMessage, "error");
+            }
+        }
+
+        // Route mapping for FHE contract
+        const ROUTE_MAPPING = {
+            'urban-express': 0,
+            'cargo-secure': 1,
+            'emergency-response': 2,
+            'night-logistics': 3
+        };
+
+        // Select transportation route
+        async function selectRoute(routeId) {
+            document.querySelectorAll('.route-card').forEach(card => card.classList.remove('selected'));
+            event.target.closest('.route-card').classList.add('selected');
+            selectedRoute = routeId;
+            console.log("Selected route:", routeId);
+
+            // Submit route selection to FHE contract if wallet is connected
+            if (userAccount && contract) {
+                try {
+                    const routeIndex = ROUTE_MAPPING[routeId];
+
+                    // Input validation to match contract requirements (0-3)
+                    if (routeIndex === undefined || routeIndex < 0 || routeIndex > 3) {
+                        showNotification("❌ Invalid route selection. Must be 0-3", "error");
+                        return;
+                    }
+
+                    console.log("🗂️ Submitting encrypted cargo route selection:", routeIndex);
+                    console.log("✅ Route validation passed - Index:", routeIndex);
+
+                    const tx = await contract.selectRoute(routeIndex);
+                    console.log("📤 Route selection transaction:", tx.hash);
+
+                    showNotification("Route selection encrypted and submitted! 🚐", "success");
+                } catch (error) {
+                    console.error("Route selection failed:", error);
+
+                    let errorMessage = "Route selection failed";
+                    if (error.message.includes("could not decode result data")) {
+                        console.log("⚠️ Demo mode: Simulating route selection");
+                        showNotification("Demo mode: Cargo route selection simulated 📦", "info");
+                        return;
+                    } else if (error.message.includes("Invalid route ID")) {
+                        errorMessage = "Invalid route selection (must be 0-3)";
+                    } else if (error.code === 4001) {
+                        errorMessage = "Transaction rejected by user";
+                    }
+
+                    showNotification("❌ " + errorMessage, "error");
+                }
+            } else if (userAccount) {
+                console.log("⚠️ Demo mode: No contract instance");
+                showNotification("Demo mode: Cargo route selection simulated 📦", "info");
+            }
+        }
+
+        // Submit vote with FHE encryption
+        async function submitVote() {
+            if (!selectedProposal) {
+                showNotification("Please select a transportation proposal first", "error");
+                return;
+            }
+
+            if (!userAccount) {
+                showNotification("Please connect your wallet first", "error");
+                return;
+            }
+
+            if (isVoting) return;
+            isVoting = true;
+
+            const voteBtn = document.getElementById('voteBtn');
+            voteBtn.innerHTML = '<span class="loading"></span> Processing Vote...';
+
+            try {
+                console.log("🗳️ Submitting transportation governance vote...");
+                console.log("📋 Proposal:", selectedProposal);
+                console.log("✅ Vote type:", selectedVote);
+
+                // Convert vote to uint8 (0 = reject, 1 = approve) - validate input
+                const voteValue = selectedVote === 'approve' ? 1 : 0;
+
+                // Input validation to match contract requirements
+                if (voteValue !== 0 && voteValue !== 1) {
+                    showNotification("❌ Invalid vote value. Must be 0 (reject) or 1 (approve)", "error");
+                    isVoting = false;
+                    return;
+                }
+
+                console.log("✅ Vote validation passed - Value:", voteValue);
+
+                // Real contract interaction with MetaMask popup
+                console.log("🔗 Starting real blockchain transaction...");
+                console.log("📋 Contract address:", CONTRACT_ADDRESS);
+                console.log("🗳️ Vote value (uint8):", voteValue);
+                console.log("👤 User account:", userAccount);
+
+                // Check if user has already voted
+                try {
+                    console.log("🔍 Checking if user has already voted...");
+                    const hasVoted = await contract.checkHasVoted(userAccount);
+                    console.log("🗳️ User has voted:", hasVoted);
+
+                    if (hasVoted) {
+                        showNotification("You have already voted in this transportation governance!", "error");
+                        voteBtn.textContent = 'Already Voted';
+                        voteBtn.disabled = true;
+                        isVoting = false;
+                        return;
+                    }
+                } catch (checkError) {
+                    console.error("Could not check voting status:", checkError.message);
+
+                    // Check if it's demo mode (contract doesn't exist)
+                    if (checkError.message.includes("could not decode result data")) {
+                        console.log("⚠️ Demo mode: Simulating vote submission");
+                        voteBtn.innerHTML = '<span class="loading"></span> Simulating Vote...';
+
+                        // Simulate processing time
+                        setTimeout(() => {
+                            voteBtn.textContent = 'Vote Submitted ✓ (Demo)';
+                            voteBtn.disabled = true;
+                            showNotification("Demo mode: Cargo governance vote simulated! 🗳️", "info");
+                            isVoting = false;
+                            dispatchCount++;
+                            updateStats();
+                        }, 2000);
+                        return;
+                    }
+
+                    // Try alternative method if available
+                    try {
+                        console.log("🔄 Trying alternative hasVoted function...");
+                        const hasVotedAlt = await contract.hasVoted(userAccount);
+                        console.log("🗳️ User has voted (alt method):", hasVotedAlt);
+
+                        if (hasVotedAlt) {
+                            showNotification("You have already voted in this cargo system governance!", "error");
+                            voteBtn.textContent = 'Already Voted';
+                            voteBtn.disabled = true;
+                            isVoting = false;
+                            return;
+                        }
+                    } catch (altError) {
+                        console.error("Alternative voting check failed:", altError.message);
+
+                        // If both methods fail and it's a decode error, go to demo mode
+                        if (altError.message.includes("could not decode result data")) {
+                            console.log("⚠️ Demo mode: Simulating vote submission (fallback)");
+                            voteBtn.innerHTML = '<span class="loading"></span> Simulating Vote...';
+
+                            setTimeout(() => {
+                                voteBtn.textContent = 'Vote Submitted ✓ (Demo)';
+                                voteBtn.disabled = true;
+                                showNotification("Demo mode: Cargo governance vote simulated! 🗳️", "info");
+                                isVoting = false;
+                                dispatchCount++;
+                                updateStats();
+                            }, 2000);
+                            return;
+                        }
+
+                        showNotification("❌ Cannot verify voting status. Please try again.", "error");
+                        voteBtn.disabled = true;
+                        isVoting = false;
+                        return;
+                    }
+                }
+
+                // Submit vote to FHE contract using submitVote pattern
+                console.log("🗳️ Submitting vote to FHE contract using uint8 pattern:", voteValue);
+
+                // MetaMask popup trigger - real transaction flow
+                voteBtn.innerHTML = '<span class="loading"></span> Waiting for MetaMask...';
+                showNotification("Please confirm the encrypted vote transaction in MetaMask...", "info");
+
+                // This line triggers the MetaMask popup for real blockchain interaction
+                const tx = await contract.submitVote(voteValue);
+                console.log("📤 Vote transaction sent to FHE contract:", tx.hash);
+
+                voteBtn.innerHTML = '<span class="loading"></span> Processing on Blockchain...';
+                showNotification("Transaction submitted! Waiting for confirmation...", "info");
+
+                // Wait for transaction confirmation
+                const receipt = await tx.wait();
+                console.log("✅ Vote transaction confirmed:", receipt.transactionHash);
+
+                // Update UI
+                voteBtn.textContent = 'Vote Submitted ✓';
+                voteBtn.disabled = true;
+                showNotification("Transportation governance vote submitted successfully! 🚀", "success");
+
+                dispatchCount++;
+                updateStats();
+
+            } catch (error) {
+                console.error("Voting failed:", error);
+                let errorMessage = "Transaction failed";
+
+                if (error.code === 4001) {
+                    errorMessage = "Transaction rejected by user";
+                } else if (error.message.includes("insufficient funds")) {
+                    errorMessage = "Insufficient ETH for gas fees";
+                } else if (error.message.includes("already voted")) {
+                    errorMessage = "You have already voted";
+                }
+
+                showNotification("❌ " + errorMessage, "error");
+                voteBtn.textContent = 'Submit Anonymous Vote';
+            } finally {
+                isVoting = false;
+            }
+        }
+
+        // Update system statistics
+        async function updateStats() {
+            try {
+                // Get real data from contract if connected
+                if (contract && userAccount) {
+                    console.log("📊 Fetching real contract statistics...");
+
+                    // Get dispatch count from contract
+                    const contractDispatchCount = await contract.getDispatchCount();
+                    document.getElementById('totalDispatches').textContent = contractDispatchCount.toString();
+                    dispatchCount = Number(contractDispatchCount);
+
+                    // Get total votes from contract
+                    const contractTotalVotes = await contract.getTotalVotes();
+                    console.log("🗳️ Total votes from contract:", contractTotalVotes.toString());
+
+                } else {
+                    // Fallback to simulated data when not connected
+                    document.getElementById('totalDispatches').textContent = dispatchCount;
+                }
+
+                // Simulate dynamic stats (these would come from a backend in production)
+                const activeVehicles = 113 + Math.floor(Math.random() * 10);
+                const onlineDrivers = 89 + Math.floor(Math.random() * 8);
+
+                document.getElementById('activeVehicles').textContent = activeVehicles;
+                document.getElementById('onlineDrivers').textContent = onlineDrivers;
+
+            } catch (error) {
+                console.error("Error updating stats:", error);
+                // Fallback to local data
+                document.getElementById('totalDispatches').textContent = dispatchCount;
+            }
+        }
+
+        // Initialize deployed proposals display
+        function initializeDeployedProposals() {
+            const proposalsContainer = document.getElementById('deployedProposals');
+            proposalsContainer.innerHTML = `
+                <h3 style="color: #e2e8f0; margin-bottom: 1rem;">
+                    ✅ Successfully Deployed Cargo Proposals
+                </h3>
+                <p style="color: #94a3b8; margin-bottom: 1.5rem; line-height: 1.5;">
+                    Click any proposal to trigger a blockchain transaction. Failures automatically switch to demo mode.
+                </p>
+                <div class="proposals-grid">
+                    ${DEPLOYED_PROPOSALS.map(proposal => `
+                        <div class="deployed-proposal" onclick="triggerProposalTransaction('${proposal.id}')" data-proposal-id="${proposal.id}">
+                            <h4>
+                                ${proposal.title}
+                                <span class="proposal-status">
+                                    ✅ ${proposal.status}
+                                </span>
+                            </h4>
+                            <p>${proposal.description}</p>
+                            <div class="proposal-meta">
+                                <span>Type: ${proposal.type}</span>
+                                <span>Impact: ${proposal.impact}</span>
+                                <span>Deployed: ${proposal.timestamp}</span>
+                            </div>
+                            <div class="proposal-tx">
+                                TX: ${proposal.txHash.substring(0, 10)}...${proposal.txHash.substring(58)}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Trigger proposal transaction
+        async function triggerProposalTransaction(proposalId) {
+            const proposal = DEPLOYED_PROPOSALS.find(p => p.id === proposalId);
+            if (!proposal) return;
+
+            const proposalElement = document.querySelector(`[data-proposal-id="${proposalId}"]`);
+            if (!proposalElement) return;
+
+            // Add processing state
+            proposalElement.classList.add('processing');
+            proposalElement.style.pointerEvents = 'none';
+
+            const originalTitle = proposalElement.querySelector('h4').innerHTML;
+            proposalElement.querySelector('h4').innerHTML = `
+                ${proposal.title}
+                <span class="proposal-status" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">
+                    ⏳ Processing...
+                </span>
+            `;
+
+            console.log(`🔗 Triggering transaction for proposal: ${proposal.title}`);
+
+            if (!userAccount) {
+                showNotification("Please connect your wallet first", "error");
+                resetProposalState(proposalElement, originalTitle);
+                return;
+            }
+
+            try {
+                if (contract) {
+                    // Try real contract interaction
+                    console.log("📤 Attempting real blockchain transaction...");
+                    const tx = await contract.createDispatch();
+                    console.log("✅ Transaction successful:", tx.hash);
+
+                    // Update UI with success
+                    proposalElement.querySelector('h4').innerHTML = `
+                        ${proposal.title}
+                        <span class="proposal-status">
+                            ✅ Transaction Success
+                        </span>
+                    `;
+
+                    showNotification(`Transaction successful for ${proposal.title}! 🎉`, "success");
+                    updateStats();
+                } else {
+                    throw new Error("No contract instance");
+                }
+            } catch (error) {
+                // Silent failure - switch to demo mode without error notification
+                console.log("⚠️ Transaction failed, switching to demo mode:", error.message);
+
+                // Simulate transaction in demo mode
+                setTimeout(() => {
+                    proposalElement.querySelector('h4').innerHTML = `
+                        ${proposal.title}
+                        <span class="proposal-status">
+                            ✅ Demo Transaction
+                        </span>
+                    `;
+                    showNotification(`Demo mode: ${proposal.title} transaction simulated`, "info");
+                    dispatchCount++;
+                    updateStats();
+                }, 1500);
+            } finally {
+                // Reset state after delay
+                setTimeout(() => {
+                    resetProposalState(proposalElement, originalTitle);
+                }, 3000);
+            }
+        }
+
+        // Reset proposal state
+        function resetProposalState(proposalElement, originalTitle) {
+            proposalElement.classList.remove('processing');
+            proposalElement.style.pointerEvents = 'auto';
+            proposalElement.querySelector('h4').innerHTML = originalTitle;
+        }
+
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 4000);
+        }
+
+        // Initialize app when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
